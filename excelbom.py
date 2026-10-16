@@ -4,6 +4,33 @@ This is not a CSV validator or a prediction of Excel's import settings.
 """
 from pathlib import Path
 import sys
+import stat
+
+
+def safe_input(value, directory=False):
+    path = Path(value).absolute()
+    if '..' in path.parts:
+        raise OSError('Parent-traversal paths are unsupported.')
+    for part in [*reversed(path.parents), path]:
+        info = part.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
+            raise OSError('Links/reparse points are unsupported.')
+    info = path.lstat()
+    if directory:
+        if not stat.S_ISDIR(info.st_mode):
+            raise NotADirectoryError('Expected an ordinary directory.')
+    elif not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise OSError('Expected an ordinary singly linked file.')
+    return path
+
+def safe_output(value):
+    path = Path(value).absolute()
+    if '..' in path.parts:
+        raise OSError('Parent-traversal paths are unsupported.')
+    safe_input(path.parent, directory=True)
+    return path
+
+
 
 BOM = b'\xef\xbb\xbf'
 
@@ -27,10 +54,10 @@ def main(argv):
         return 0
     path = Path(argv[1])
     try:
-        raw = path.read_bytes()
+        raw = safe_input(path).read_bytes()
         marked, example, misread = inspect(raw)
     except OSError as error:
-        print('Cannot read file: %s (%s)' % (path, error.strerror), file=sys.stderr)
+        print('Cannot read file: %s (%s)' % (path, (error.strerror or str(error))), file=sys.stderr)
         return 2
     except UnicodeDecodeError:
         print('Result: not valid UTF-8, even if a BOM is present.')
@@ -51,14 +78,14 @@ def main(argv):
         return 0
     target = path.with_suffix('.bom.csv')
     try:
-        with target.open('xb') as handle:  # Never replace an existing path or link.
+        with safe_output(target).open('xb') as handle:  # Never replace an existing path or link.
             handle.write(BOM + raw)
     except FileExistsError:
         print('Stopped: output already exists: ' + str(target), file=sys.stderr)
         print('No existing output was replaced.', file=sys.stderr)
         return 1
     except OSError as error:
-        print('Could not write new copy: %s (%s)' % (target, error.strerror), file=sys.stderr)
+        print('Could not write new copy: %s (%s)' % (target, (error.strerror or str(error))), file=sys.stderr)
         print('Inspect that path for an incomplete new file before trying again.', file=sys.stderr)
         return 2
     print('Wrote new marked copy: ' + str(target))
