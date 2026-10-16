@@ -1,0 +1,102 @@
+### CMD: python --version
+Python 3.12.10
+### EXIT: 0
+
+### CMD: python make_sample.py
+Created sample/guests.csv with 4 fictional UTF-8 records, without a BOM.
+The historic filename guests.csv is kept, but the sample contains items, not people.
+### EXIT: 0
+
+### CMD: python make_sample.py
+Stopped: sample already exists. Nothing was replaced or deleted.
+### EXIT: 1
+
+### CMD: python -c "from pathlib import Path; print(Path('sample/guests.csv').read_text(encoding='utf-8'), end='')"
+Item,City,Quantity
+Caf�,M�laga,3
+Cr�me,G�teborg,7
+Th�,K�benhavn,1
+Pi�ata,Montr�al,5
+### EXIT: 0
+
+### CMD: python excelbom.py sample/guests.csv
+UTF-8 byte check
+File: sample\guests.csv
+Result: valid UTF-8 WITHOUT a byte-order mark.
+UTF-8 example: Caf�,M�laga,3
+Same bytes decoded as Windows-1252 (simulation): Café,Málaga,3
+This does not verify CSV structure or predict every Excel import path.
+No files written. --fix can add a BOM to a new copy of unmarked UTF-8.
+### EXIT: 0
+
+### CMD: python excelbom.py sample/guests.csv --fix
+UTF-8 byte check
+File: sample\guests.csv
+Result: valid UTF-8 WITHOUT a byte-order mark.
+UTF-8 example: Caf�,M�laga,3
+Same bytes decoded as Windows-1252 (simulation): Café,Málaga,3
+This does not verify CSV structure or predict every Excel import path.
+Wrote new marked copy: sample\guests.bom.csv
+Original bytes unchanged. Check the import result before using or sharing it.
+### EXIT: 0
+
+### CMD: python excelbom.py sample/guests.csv --fix
+Stopped: output already exists: sample\guests.bom.csv
+No existing output was replaced.
+UTF-8 byte check
+File: sample\guests.csv
+Result: valid UTF-8 WITHOUT a byte-order mark.
+UTF-8 example: Caf�,M�laga,3
+Same bytes decoded as Windows-1252 (simulation): Café,Málaga,3
+This does not verify CSV structure or predict every Excel import path.
+### EXIT: 1
+
+### CMD: python excelbom.py sample/guests.bom.csv
+UTF-8 byte check
+File: sample\guests.bom.csv
+Result: valid UTF-8 WITH a byte-order mark.
+UTF-8 example: Caf�,M�laga,3
+Same bytes decoded as Windows-1252 (simulation): Café,Málaga,3
+This does not verify CSV structure or predict every Excel import path.
+No files written. --fix can add a BOM to a new copy of unmarked UTF-8.
+### EXIT: 0
+
+### CMD: python -m unittest -v
+test_bom_valid (test_excelbom.Checks.test_bom_valid) ... ok
+test_empty_utf8 (test_excelbom.Checks.test_empty_utf8) ... ok
+test_existing_copy_refused (test_excelbom.Checks.test_existing_copy_refused) ... ok
+test_fix_keeps_source_mtime (test_excelbom.Checks.test_fix_keeps_source_mtime) ... ok
+test_invalid_utf8_with_bom (test_excelbom.Checks.test_invalid_utf8_with_bom) ... ok
+test_invalid_utf8_without_bom (test_excelbom.Checks.test_invalid_utf8_without_bom) ... ok
+test_marked_no_duplicate (test_excelbom.Checks.test_marked_no_duplicate) ... ok
+test_missing_file (test_excelbom.Checks.test_missing_file) ... ok
+test_new_copy_exact_bytes (test_excelbom.Checks.test_new_copy_exact_bytes) ... ok
+test_non_csv_still_not_certified (test_excelbom.Checks.test_non_csv_still_not_certified) ... ok
+test_output_directory_refused (test_excelbom.Checks.test_output_directory_refused) ... ok
+test_plain_utf8 (test_excelbom.Checks.test_plain_utf8) ... ok
+test_read_only_keeps_bytes_metadata_and_directory (test_excelbom.Checks.test_read_only_keeps_bytes_metadata_and_directory) ... ok
+test_setup_refuses_existing_sample (test_excelbom.Checks.test_setup_refuses_existing_sample) ... ok
+test_wrong_flag (test_excelbom.Checks.test_wrong_flag) ... ok
+test_ancestor_alias_refuses (test_excelbom.PathSafety.test_ancestor_alias_refuses) ... ok
+test_file_alias_refuses (test_excelbom.PathSafety.test_file_alias_refuses) ... ok
+test_file_ancestor_refuses (test_excelbom.PathSafety.test_file_ancestor_refuses) ... ok
+test_file_dangling_refuses (test_excelbom.PathSafety.test_file_dangling_refuses) ... ok
+test_file_hardlink_refuses (test_excelbom.PathSafety.test_file_hardlink_refuses) ... ok
+test_file_pipe_refuses (test_excelbom.PathSafety.test_file_pipe_refuses) ... skipped 'Unix pipe unavailable'
+test_file_self_loop_refuses (test_excelbom.PathSafety.test_file_self_loop_refuses) ... ok
+test_file_traversal_refuses (test_excelbom.PathSafety.test_file_traversal_refuses) ... ok
+test_metadata_error_refuses (test_excelbom.PathSafety.test_metadata_error_refuses) ... ok
+test_output_linked_parent_refuses (test_excelbom.PathSafety.test_output_linked_parent_refuses) ... ok
+test_output_metadata_error_refuses (test_excelbom.PathSafety.test_output_metadata_error_refuses) ... ok
+test_output_traversal_refuses (test_excelbom.PathSafety.test_output_traversal_refuses) ... ok
+test_read_error_stops (test_excelbom.PathSafety.test_read_error_stops) ... ok
+test_reparse_attribute_refuses (test_excelbom.PathSafety.test_reparse_attribute_refuses) ... ok
+test_root_alias_refuses (test_excelbom.PathSafety.test_root_alias_refuses) ... ok
+test_setup_alias_parent_refuses (test_excelbom.PathSafety.test_setup_alias_parent_refuses) ... ok
+test_setup_traversal_refuses (test_excelbom.PathSafety.test_setup_traversal_refuses) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.107s
+
+OK (skipped=1)
+### EXIT: 0
