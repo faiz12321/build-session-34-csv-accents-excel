@@ -1,11 +1,18 @@
 """Create fictional UTF-8 practice CSV only in a new sample folder."""
 from pathlib import Path
+import stat
 
 CSV = 'Item,City,Quantity\nCafé,Málaga,3\nCrème,Göteborg,7\nThé,København,1\nPiñata,Montréal,5\n'
 
 
 def main():
-    folder = Path(__file__).resolve().parent / 'sample'
+    folder = Path(__file__).absolute().parent / 'sample'
+    if '..' in folder.parts:
+        raise OSError('Parent-traversal paths are unsupported.')
+    for parent in reversed(folder.parents):
+        info = parent.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
+            raise OSError('Linked/reparse-point parents are unsupported.')
     try:
         folder.mkdir()
     except FileExistsError:
