@@ -1,0 +1,22 @@
+name: tests
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Run all fixture and collision tests
+        run: python -m unittest -v
+      - name: Make a new sample folder
+        run: python make_sample.py
+      - name: Show sample report
+        run: python excelbom.py sample/guests.csv
